@@ -4,5 +4,5 @@
 #include <stdio.h>
 #include<string>
 
-void Recursion(TiXmlElement* node);
+void Recursion(TiXmlElement* node, CStdioFile*);
 

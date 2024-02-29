@@ -1,8 +1,23 @@
 # include "Recursion.h"
 
-void Recursion(TiXmlElement* node)
+void Recursion(TiXmlElement* Element, CStdioFile* CSVfile)
 {
+	CString Csv_Source_Info = "";
+	while (Element)
+	{
+		TiXmlElement* Source_root = Element->FirstChildElement();//1ere Source
+		while (Source_root)
+		{
+			Csv_Source_Info = Csv_Source_Info + Source_root->Value() + "\n";
+			(*CSVfile).WriteString(Csv_Source_Info);
+			Csv_Source_Info = "";
+			Source_root = Source_root->NextSiblingElement();
+		}
 
+		//On passe à la nature suivante
+		Element = Element->NextSiblingElement();
+
+	}
 }
 
 void main() {
@@ -17,26 +32,13 @@ void main() {
 		{
 			return;
 		}
-		CString Csv_Source_Info = "";
+
 		TiXmlElement* root = doc.FirstChildElement();//XML_Sources
 		TiXmlElement* Nature_root = root->FirstChildElement()->NextSiblingElement()->FirstChildElement();//Première Nature
-
-		while (Nature_root)
-		{
-			TiXmlElement* Source_root = Nature_root->FirstChildElement();//1ere Source
-			while (Source_root)
-			{
-				Csv_Source_Info = Csv_Source_Info + Source_root->Value() + "\n";
-				fileResCSV.WriteString(Csv_Source_Info);
-				Csv_Source_Info = "";
-				Source_root = Source_root->NextSiblingElement();
-			}
-
-			//On passe à la nature suivante
-			Nature_root = Nature_root->NextSiblingElement();
-
-		}
+		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
+		Recursion(Nature_root, &fileResCSV);
 	}
+
 	fileResCSV.Close();
 	return;
 }
