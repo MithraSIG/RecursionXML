@@ -1,44 +1,70 @@
 # include "Recursion.h"
 
-void Recursion(TiXmlElement* Element, CStdioFile* CSVfile)
+const char* Source_type = "SVol";
+void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent)
 {
-	CString Csv_Source_Info = "";
+	CString Csv_Source_Info ="",test;
+	if (Element)
+		 test = Element->Value();
+		if (test == Source_type)
+			Csv_Source_Info = "\n ";
+		
+
 	while (Element)
 	{
-		TiXmlElement* Source_root = Element->FirstChildElement();//1ere Source
-		while (Source_root)
+		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
+		while (Attribute_finder)//Tant qu'il y a des attributs on les parse
 		{
-			Csv_Source_Info = Csv_Source_Info + Source_root->Value() + "\n";
+			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Value() + ";";
+			Attribute_finder = Attribute_finder->Next();
 			(*CSVfile).WriteString(Csv_Source_Info);
 			Csv_Source_Info = "";
-			Source_root = Source_root->NextSiblingElement();
 		}
-
-		//On passe à la nature suivante
-		Element = Element->NextSiblingElement();
-
+		if (!(Element->GetText() == NULL))//On regarde s''il y a du texte dans l'élément
+		{
+			Csv_Source_Info = Csv_Source_Info + (CString)(Element->GetText()) + ";";
+			(*CSVfile).WriteString(Csv_Source_Info);
+			Csv_Source_Info = "";
+			Recursion(Element->NextSiblingElement(), CSVfile, descent);
+			if (!descent) Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent);
+		}
+		else//L'élément n'a pas de texte 
+		{
+			Recursion(Element->FirstChildElement(), CSVfile, true);
+			Recursion(Element->NextSiblingElement(), CSVfile, descent);
+			if (!descent) Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent);
+		}
+		return;
 	}
 }
 
-void main() {
+
+void Recursion_(TiXmlElement* Element, CStdioFile CSVfile)
+{
+	printf("%s", Element->FirstChildElement()->Value());
+	return;
+}
+
+int main()
+{
 	CStdioFile fileResCSV;
-	const char* TEST_FILE = "C:\\Users\\dcollado\\Desktop\\point.xml";
-	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\point.csv";
+	const char* TEST_FILE = "C:\\Users\\dcollado\\Desktop\\volum.xml";
+	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\volum.csv";
 
 	TiXmlDocument doc = TiXmlDocument(TEST_FILE);
 	if (doc.LoadFile())
 	{
 		if (!fileResCSV.Open(FLAT_FILE, CFile::modeCreate | CFile::modeWrite))
 		{
-			return;
+			return 0;
 		}
 
 		TiXmlElement* root = doc.FirstChildElement();//XML_Sources
-		TiXmlElement* Nature_root = root->FirstChildElement()->NextSiblingElement()->FirstChildElement();//Première Nature
+		static  TiXmlElement* Nature_root = root->FirstChildElement()->NextSiblingElement()->FirstChildElement();//Première Nature
 		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
-		Recursion(Nature_root, &fileResCSV);
+		Recursion(Nature_root, &fileResCSV, false);
 	}
 
 	fileResCSV.Close();
-	return;
+	return 0;
 }
