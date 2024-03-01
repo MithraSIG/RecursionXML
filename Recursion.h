@@ -5,6 +5,6 @@
 #include <iostream>
 #include<string>
 
-void Recursion_(TiXmlElement* node, CStdioFile*);
-void Recursion(TiXmlElement* node, CStdioFile*, bool);
+void Recursion_(TiXmlElement* node, CStdioFile*, bool, const CString);
+void Recursion(TiXmlElement* node, CStdioFile*, bool, const CString);
 
