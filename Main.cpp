@@ -4,11 +4,30 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 {
 	CString Csv_Source_Info = "";
 	CString Val_Elem = "";
+	static CString Nature_Name = "";
+	static int Nature_count = 0;
 	while (Element) 
 	{
 		Val_Elem = Element->Value();
+		
+		if (Val_Elem == Nature[Source_type])
+		{
+			Nature_Name = Element->FirstAttribute()->Value();
+
+		}
 		if (Val_Elem == Source_type)
-			Csv_Source_Info = "\n ";
+		{
+			if (Nature_count == 0)//A la premiere source, on ne va pas à la ligne
+			{
+				Csv_Source_Info = Nature_Name + ";";
+			}
+			else
+			{
+				Csv_Source_Info = "\n" + Nature_Name + ";";
+			}
+			Nature_count++;
+		}
+
 		if (Val_Elem == "Points" || Val_Elem == "Point" && Source_type == XML_ECHANG_VALEUR_SP)
 		{
 			TiXmlPrinter printer;
@@ -20,22 +39,12 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 		}
 
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
-		while (Attribute_finder)//Tant qu'il y a des attributs on les parse
+		while (Attribute_finder && !(Val_Elem == Nature[Source_type]))//Tant qu'il y a des attributs on les parse
 		{
-			CString prov = CString(Attribute_finder->Value());
-			if (prov == Nature[Source_type])
-			{
-				Csv_Source_Info = Csv_Source_Info + ";";
-				(*CSVfile).WriteString(Csv_Source_Info);
-				Csv_Source_Info = "";
-			}
-			else
-			{
-				Csv_Source_Info = Csv_Source_Info + Attribute_finder->Value() + ";";
-				Attribute_finder = Attribute_finder->Next();
-				(*CSVfile).WriteString(Csv_Source_Info);
-				Csv_Source_Info = "";
-			}
+			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Value() + ";";
+			Attribute_finder = Attribute_finder->Next();
+			(*CSVfile).WriteString(Csv_Source_Info);
+			Csv_Source_Info = "";
 		}
 		if (!(Element->GetText() == NULL))//On regarde s''il y a du texte dans l'élément
 		{
