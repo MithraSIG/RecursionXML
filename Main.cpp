@@ -67,12 +67,32 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 
 void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const CString Source_type)
 {
-	CString Csv_Source_Info = "", Val_Elem;
+	CString Csv_Source_Info = "";
+	CString Val_Elem = "";
+	static CString Nature_Name = "";
+	static int Nature_count = 0;
 	while (Element)
 	{
 		Val_Elem = Element->Value();
+
+		if (Val_Elem == Nature[Source_type])
+		{
+			Nature_Name = Element->FirstAttribute()->Value();
+
+		}
 		if (Val_Elem == Source_type)
-			Csv_Source_Info = "\n ";
+		{
+			if (Nature_count == 0)//A la premiere source, on ne va pas à la ligne
+			{
+				Csv_Source_Info = Nature_Name + ";";
+			}
+			else
+			{
+				Csv_Source_Info = "\n" + Nature_Name + ";";
+			}
+			Nature_count++;
+		}
+
 		if (Val_Elem == "Points" || Val_Elem == "Point" && Source_type == XML_ECHANG_VALEUR_SP)
 		{
 			TiXmlPrinter printer;
@@ -84,7 +104,7 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 		}
 
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
-		while (Attribute_finder)//Tant qu'il y a des attributs on les parse
+		while (Attribute_finder && !(Val_Elem == Nature[Source_type]))//Tant qu'il y a des attributs on les parse
 		{
 			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Value() + ";";
 			Attribute_finder = Attribute_finder->Next();
@@ -125,8 +145,8 @@ int main()
 		TiXmlElement* root = doc.FirstChildElement();//XML_Sources
 		static  TiXmlElement* Nature_root = root->FirstChildElement()->NextSiblingElement()->FirstChildElement();//Première Nature
 		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
-		//Find_headers(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol);
-		Recursion(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol);
+		Find_headers(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol);
+		//Recursion(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol);
 		
 	}
 
