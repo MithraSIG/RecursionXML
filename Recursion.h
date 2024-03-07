@@ -40,6 +40,7 @@ std::map< CString, CString> Nature{
 };
 
 static int compteur = 0;
-void Find_headers(TiXmlElement* node, CStdioFile*, bool,  CString);
-void Recursion(TiXmlElement* node, CStdioFile*, bool,  CString);
+void Find_headers(TiXmlElement* node, CStdioFile*, bool,  CString,int&);
+void Recursion(TiXmlElement* node, CStdioFile*, bool,  CString ,CString&, int&);
+CString Find_Lw(const char*);
 
