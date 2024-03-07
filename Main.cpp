@@ -24,6 +24,8 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 			else
 			{
 				Csv_Source_Info = "\n" + Nature_Name + ";";
+				(*CSVfile).WriteString(Csv_Source_Info);
+				Csv_Source_Info = "";
 			}
 			Nature_count++;
 		}
@@ -37,18 +39,28 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 			(*CSVfile).WriteString(geom + ";");
 			return;
 		}
+
 		if (Val_Elem == "Ref_Model")
 			(*CSVfile).WriteString(Find_Lw(Element->GetText()) + ";");
 
+		if (Val_Elem == "Lw")
+		{
+			TiXmlPrinter printer;
+			Element->Accept(&printer);
+			CString Lw = printer.CStr();
+			Lw.Remove('\n');
+			(*CSVfile).WriteString(Lw + ";");
+		}
+
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
-		while (Attribute_finder && !(Val_Elem == Nature[Source_type]))//Tant qu'il y a des attributs on les parse
+		while (Attribute_finder && !(Val_Elem == Nature[Source_type])  && !(Val_Elem== "Lw"))//Tant qu'il y a des attributs on les parse
 		{
 			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Value() + ";";
 			Attribute_finder = Attribute_finder->Next();
 			(*CSVfile).WriteString(Csv_Source_Info);
 			Csv_Source_Info = "";
 		}
-		if (!(Element->GetText() == NULL))//On regarde s''il y a du texte dans l'élément
+		if (!(Val_Elem == "Measure") && !(Element->GetText() == NULL) && !(Val_Elem == "Lw"))//On regarde s''il y a du texte dans l'élément
 		{
 			Csv_Source_Info = Csv_Source_Info + (CString)(Element->GetText()) + ";";
 			(*CSVfile).WriteString(Csv_Source_Info);
@@ -77,11 +89,11 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 		if (Val_Elem == Source_type)
 		{
 			Source_Count++;
-			if (Source_Count > 1) return;
 		}
 		if (Source_Count > 1) return;
 		if (Val_Elem == Nature[Source_type])
 		{
+			if (Source_Count > 0) return;
 			(*CSVfile).WriteString(Val_Elem);
 			(*CSVfile).WriteString((LPCTSTR)";");
 		}
@@ -94,15 +106,20 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 			return;
 		}
 
+		if (Val_Elem == "Lw")
+		{
+			(*CSVfile).WriteString((LPCTSTR)"Lw;");
+			Find_headers(Element->NextSiblingElement(), CSVfile, descent, Source_type, Source_Count);//On peut lancer un next, la recursion s'arrete, il n'y aura pas de second parcours
+		}
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
-		while (Attribute_finder && !(Val_Elem == Nature[Source_type]))//Tant qu'il y a des attributs on les parse
+		while (Attribute_finder && !(Val_Elem == Nature[Source_type]) && !(Val_Elem == "Lw"))//Tant qu'il y a des attributs on les parse
 		{
 			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Name() + ";";
 			Attribute_finder = Attribute_finder->Next();
 			(*CSVfile).WriteString(Csv_Source_Info);
 			Csv_Source_Info = "";
 		}
-		if (!(Element->GetText() == NULL))//On regarde s''il y a du texte dans l'élément
+		if (!(Val_Elem == "Measure") && !(Element->GetText() == NULL))//On regarde s''il y a du texte dans l'élément
 		{
 			Csv_Source_Info = Csv_Source_Info + Val_Elem + ";";
 			(*CSVfile).WriteString(Csv_Source_Info);
@@ -120,16 +137,16 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 	}
 }
 
-CString Find_Lw(const char* id)
+CString Find_Lw(std::string id)
 {
-	const char* REF_FILE = "C:\\Users\\dcollado\\Desktop\\volum_RefModel.xml";
-	TiXmlDocument doc(REF_FILE);
+	const std::string REF_FILE = "C:\\Users\\dcollado\\Desktop\\volum_RefModel.xml";
+	TiXmlDocument doc(REF_FILE.c_str());
 	if (!doc.LoadFile()) { return "Echec"; };
 	TiXmlHandle MyHandle(&doc);
 	TiXmlElement* source_element = MyHandle.FirstChildElement("Sources_Industry").FirstChildElement("sources").FirstChildElement("source").Element();//Première Nature
 	while (source_element)
 	{
-		if (strcmp(source_element->Attribute("id"), id) == 0)
+		if (strcmp(source_element->Attribute("id"), id.c_str()) == 0)
 		{
 			TiXmlPrinter printer;
 			source_element->FirstChildElement("Lw")->Accept(&printer);
@@ -145,10 +162,10 @@ CString Find_Lw(const char* id)
 int main()
 {
 	CStdioFile fileResCSV;
-	const char* TEST_FILE = "C:\\Users\\dcollado\\Desktop\\volum.xml";
+	const std::string TEST_FILE = "C:\\Users\\dcollado\\Desktop\\volum.xml";
 	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\volum.csv";
 
-	TiXmlDocument doc = TiXmlDocument(TEST_FILE);
+	TiXmlDocument doc = TiXmlDocument(TEST_FILE.c_str());
 	if (doc.LoadFile())
 	{
 		if (!fileResCSV.Open(FLAT_FILE, CFile::modeCreate | CFile::modeWrite))
@@ -166,9 +183,6 @@ int main()
 		CString newline = "\n";
 		(fileResCSV).WriteString(newline);
 		Recursion(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol, Nature_Name, Nature_count);
-		CString Reponse = Find_Lw("8");
-		printf("%s", Reponse);
-
 
 	}
 
