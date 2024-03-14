@@ -9,7 +9,7 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 	while (Element)
 	{
 		Val_Elem = Element->Value();
-		//I---------------------Gestion des spécificités des balises--------------------------------------
+		//   I---------------------Gestion des spécificités des balises--------------------------------------
 		//Nom de la nature
 		if (Val_Elem == Nature[Source_type])
 		{
@@ -41,7 +41,7 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 			(*CSVfile).WriteString(geom + ";");
 			return;
 		}
-
+		//Si on a une ref. on va la chercher dans le fichier correspondant
 		if (Val_Elem == "Ref_Model")
 			m_Lw = Find_Lw(Element->GetText()) + ";";
 
@@ -56,11 +56,13 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 		}
 
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
-		while (Attribute_finder && !(Val_Elem == Nature[Source_type]) && !(Val_Elem == "Lw") && !(std::strcmp(Attribute_finder->Name(), "Percent") == 0))//Tant qu'il y a des attributs on les parse
+		//Tant qu'il y a des attributs non Lw, non nature, et qui ne soit pas  "Percent",  on les parse
+		while (Attribute_finder && !(Val_Elem == Nature[Source_type]) && !(Val_Elem == "Lw") && !(std::strcmp(Attribute_finder->Name(), "Percent") == 0))
 		{
 			Csv_Source_Info = Attribute_finder->Value() + CString(";");
 			(*CSVfile).WriteString(Csv_Source_Info);
-			if (Val_Elem == "Period" && (Element->GetText() == NULL))
+			//Period a deux cas différents: avec ou sans refernec au modele, ici on caracterise  le Period de la reference
+			if (Val_Elem == "Period" && (Element->GetText() == NULL) && !(Element->FirstChildElement()))
 				(*CSVfile).WriteString(m_Lw);
 			Attribute_finder = Attribute_finder->Next();
 			Csv_Source_Info = "";
@@ -71,11 +73,14 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 			Csv_Source_Info = Csv_Source_Info + (CString)(Element->GetText()) + ";";
 			(*CSVfile).WriteString(Csv_Source_Info);
 			Csv_Source_Info = "";
-			// II----------------Promenade récursive-----------------------------
-			// 
+		}
+		//  II----------------Promenade récursive-----------------------------
+		if (!(Element->GetText() == NULL))
+		{
 			//Si texte: on est sur une feuille, donc on regarde l'élément suivant ou on remonte dans l'arborescence
 			Recursion(Element->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
-			if (!descent) Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
+			if (!descent)
+				Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
 		}
 		else//L'élément n'a pas de texte 
 			//On essaie de descendre 
@@ -83,7 +88,8 @@ void Recursion(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, const C
 		{
 			Recursion(Element->FirstChildElement(), CSVfile, true, Source_type, Nature_Name, Nature_count, m_Lw);
 			Recursion(Element->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
-			if (!descent) Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
+			if (!descent)
+				Recursion(Element->Parent()->NextSiblingElement(), CSVfile, descent, Source_type, Nature_Name, Nature_count, m_Lw);
 		}
 		return;
 	}
@@ -120,17 +126,21 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 		if (Val_Elem == "Lw")
 		{
 			(*CSVfile).WriteString((LPCTSTR)"Lw;");
-			Find_headers(Element->NextSiblingElement(), CSVfile, descent, Source_type, Source_Count);//On peut lancer un next, la recursion s'arrete, il n'y aura pas de second parcours
 		}
 		TiXmlAttribute* Attribute_finder = Element->FirstAttribute();
 		while (Attribute_finder && !(Val_Elem == Nature[Source_type]) && !(Val_Elem == "Lw"))//Tant qu'il y a des attributs on les parse
 		{
-			Csv_Source_Info = Csv_Source_Info + Attribute_finder->Name() + ";";
+			if (std::strcmp(Attribute_finder->Name(), "Percent") == 0)
+				Csv_Source_Info = Csv_Source_Info + "Lw" + ";";
+			else
+			{
+				Csv_Source_Info = Csv_Source_Info + Attribute_finder->Name() + ";";
+			}
 			Attribute_finder = Attribute_finder->Next();
 			(*CSVfile).WriteString(Csv_Source_Info);
 			Csv_Source_Info = "";
 		}
-		if (!(Val_Elem == "Measure") && !(Element->GetText() == NULL) && !(Val_Elem == "Directivity"))//On regarde s''il y a du texte dans l'élément
+		if (!(Val_Elem == "Ref_Model") && !(Val_Elem == "Measure") && !(Element->GetText() == NULL) && !(Val_Elem == "Directivity"))//On regarde s''il y a du texte dans l'élément
 		{
 			Csv_Source_Info = Csv_Source_Info + Val_Elem + ";";
 			(*CSVfile).WriteString(Csv_Source_Info);
@@ -150,7 +160,8 @@ void Find_headers(TiXmlElement* Element, CStdioFile* CSVfile, bool descent, cons
 
 CString Find_Lw(std::string id)
 {
-	const std::string REF_FILE = "C:\\Users\\dcollado\\Desktop\\points_RefModel.xml";
+	const std::string REF_FILE = "C:\\Users\\dcollado\\Desktop\\test_RefModel.xml";
+	//const std::string REF_FILE = "C:\\Users\\dcollado\\Desktop\\point_RefModel.xml";
 	const std::string ALT_REF_FILE = "C:\\Users\\dcollado\\AppData\\Local\\MITHRA\\MITHRA\-SIG\\Params\\MITHRA\-SIG_RefModel.xml";
 
 	TiXmlDocument doc(REF_FILE.c_str());
@@ -193,8 +204,8 @@ CString Find_Lw(std::string id)
 int main()
 {
 	CStdioFile fileResCSV;
-	const std::string TEST_FILE = "C:\\Users\\dcollado\\Desktop\\points.xml";
-	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\points.csv";
+	const std::string TEST_FILE = "C:\\Users\\dcollado\\Desktop\\test.xml";
+	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\test_mano.csv";
 	CString m_Lw = "";
 	TiXmlDocument doc = TiXmlDocument(TEST_FILE.c_str());
 	if (doc.LoadFile())
@@ -210,10 +221,10 @@ int main()
 		int Nature_count = 0;
 		int Source_Count = 0;
 		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
-		Find_headers(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SP, Source_Count);
+		Find_headers(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol, Source_Count);
 		CString newline = "\n";
 		(fileResCSV).WriteString(newline);
-		Recursion(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SP, Nature_Name, Nature_count, m_Lw);
+		Recursion(Nature_root, &fileResCSV, false, XML_ECHANG_VALEUR_SVol, Nature_Name, Nature_count, m_Lw);
 
 	}
 
