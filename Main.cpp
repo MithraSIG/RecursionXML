@@ -215,10 +215,10 @@ int main()
 {
 	ofstream fileResCSV;
 	const std::string TEST_FILE = "C:\\Users\\dcollado\\Desktop\\test.xml";
-	const CString FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\test_mano.csv";
-	CString m_Lw = "";
+	const std::string FLAT_FILE = "C:\\Users\\dcollado\\Desktop\\test_mano.csv";
+	std::string m_Lw = "";
 	tinyxml2::XMLDocument doc ;
-	if (doc.LoadFile(TEST_FILE.c_str()))
+	if (doc.LoadFile(TEST_FILE.c_str()) == tinyxml2::XML_SUCCESS)
 	{
 		fileResCSV.open(FLAT_FILE);
 		if (!fileResCSV.is_open())
