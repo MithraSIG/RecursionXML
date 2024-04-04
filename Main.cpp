@@ -24,13 +24,14 @@ std::string Find_Lw(std::string id)
 			source_element->FirstChildElement("Lw")->Accept(&printer);
 			std::string geom = printer.CStr();
 			String::replace(geom, "\n", "");
+			String::replace(geom, "\t", "");
 			return geom;
 		}
 		else
 			source_element = source_element->NextSiblingElement();
 	}
-	tinyxml2::XMLDocument Alt_doc(ALT_REF_FILE.c_str());
-	if (Alt_doc.LoadFile(REF_FILE.c_str()) != tinyxml2::XML_SUCCESS)
+	tinyxml2::XMLDocument Alt_doc;
+	if (Alt_doc.LoadFile(ALT_REF_FILE.c_str()) != tinyxml2::XML_SUCCESS)
 		return "Echec";
 
 	XMLHandle Alt_MyHandle(&Alt_doc);
@@ -43,6 +44,7 @@ std::string Find_Lw(std::string id)
 			source_element->FirstChildElement("Lw")->Accept(&printer);
 			std::string geom = printer.CStr();
 			String::replace(geom, "\n", "");
+			String::replace(geom, "\t", "");
 			return geom;
 		}
 		else
@@ -88,6 +90,7 @@ void Recursion(XMLElement* Element, ofstream& CSVfile, bool descent, const std::
 			Element->Accept(&printer);
 			std::string geom = printer.CStr();
 			String::replace(geom, "\n", "");
+			String::replace(geom, "\t", "");
 			CSVfile << geom + ";";
 			return;
 		}
@@ -102,6 +105,7 @@ void Recursion(XMLElement* Element, ofstream& CSVfile, bool descent, const std::
 			Element->Accept(&printer);
 			std::string Lw = printer.CStr();
 			String::replace(Lw, "\n", "");
+			String::replace(Lw, "\t", "");
 			CSVfile << Lw + ";";
 		}
 
@@ -233,10 +237,10 @@ int main()
 		int Source_Count = 0;
 		std::string m_Lw = "";
 		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
-		Find_headers(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SVol, Source_Count);
+		Find_headers(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SSurf , Source_Count);
 		std::string newline = "\n";
 		fileResCSV << newline;
-		Recursion(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SVol, Nature_Name, Nature_count, m_Lw);
+		Recursion(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SSurf, Nature_Name, Nature_count, m_Lw);
 
 	}
 
