@@ -180,7 +180,7 @@ void Find_headers(XMLElement* Element, ofstream& CSVfile, bool descent, const st
 
 		if (Val_Elem == "Lw")
 		{
-			CSVfile << "Lw;";
+		//	CSVfile << "Lw;";
 		}
 		const XMLAttribute* Attribute_finder = Element->FirstAttribute();
 		while (Attribute_finder && !(Val_Elem == Nature[Source_type]) && !(Val_Elem == "Lw"))//Tant qu'il y a des attributs on les parse
