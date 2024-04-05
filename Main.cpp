@@ -77,7 +77,7 @@ void Recursion(XMLElement* Element, ofstream& CSVfile, bool descent, const std::
 			}
 			else
 			{
-				Csv_Source_Info = "\n" + Nature_Name + ";";
+				Csv_Source_Info = "\n " + Nature_Name + ";";
 				CSVfile << Csv_Source_Info;
 				Csv_Source_Info = "";
 			}
@@ -237,10 +237,10 @@ int main()
 		int Source_Count = 0;
 		std::string m_Lw = "";
 		//Une ligne CSV par Child de l'élément envoyé à Recursion et de ceux de ses Siblings
-		Find_headers(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SSurf , Source_Count);
+		Find_headers(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SP , Source_Count);
 		std::string newline = "\n";
 		fileResCSV << newline;
-		Recursion(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SSurf, Nature_Name, Nature_count, m_Lw);
+		Recursion(Nature_root, fileResCSV, false, XML_ECHANG_VALEUR_SP, Nature_Name, Nature_count, m_Lw);
 
 	}
 
